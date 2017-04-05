@@ -2,9 +2,12 @@ var express = require('express')
 const path = require('path');
 var app = express()
 
-app.get('/data/virginia', function (req, res) {
-  console.log('sending virginia');
+app.get('/data/virginia/map', function (req, res) {
   res.sendFile(path.join(__dirname, 'data', 'vaprecincts2016-5.json'));
+});
+
+app.get('/data/virginia/demographics', function (req, res) {
+  res.sendFile(path.join(__dirname, 'data', 'demographics.json'));
 });
 
 app.get('/data/boston', function (req, res) {
