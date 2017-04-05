@@ -1,18 +1,24 @@
 {
   "name": "redistricting-maps",
-  "version": "0.1.0",
-  "private": true,
-  "dependencies": {
-    "react": "^15.4.2",
-    "react-dom": "^15.4.2"
-  },
-  "devDependencies": {
-    "react-scripts": "0.9.5"
-  },
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
   "scripts": {
-    "start": "react-scripts start",
-    "build": "react-scripts build",
-    "test": "react-scripts test --env=jsdom",
-    "eject": "react-scripts eject"
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mdbenjam/redistricting-maps.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mdbenjam/redistricting-maps/issues"
+  },
+  "homepage": "https://github.com/mdbenjam/redistricting-maps#readme",
+  "dependencies": {
+    "d3": "^4.7.4",
+    "d3-geo": "^1.6.3",
+    "express": "^4.15.2"
   }
 }
