@@ -20,10 +20,7 @@ app.get('/', function (req, res) {
   res.sendFile(path.join(__dirname, 'testmap.html'));
 });
 
-app.get('/styles.css', function (req, res) {
-  console.log('sending styles');
-  res.sendFile(path.join(__dirname, 'styles.css'));
-});
+app.use(express.static('public'))
 
 
 app.listen(4000, function () {

@@ -2,55 +2,10 @@
 <head>
   <title>A D3 map</title>
   <link rel="stylesheet" href="styles.css">
-  <script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
-  <script src="//d3js.org/topojson.v1.min.js"></script>
   <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.0/jquery.min.js"></script>
 </head>
 <body>
-  <script>
-  $.get( "data/virginia", function( data ) {
-    var width = 800,
-        height = 800;
-
-    var svg = d3.select( "body" )
-      .append( "svg" )
-      .attr( "width", width )
-      .attr( "height", height );
-
-    var g = svg.append( "g" );
-
-    var projection = d3.geo.projection(function(x, y) { return [x, y];})
-      .precision(0).scale(1).translate([0, 0]);
-
-    var path = d3.geo.path().projection(projection);
-
-    var bounds = path.bounds(data),
-        scale  = 10 * .95 / Math.max((bounds[1][0] - bounds[0][0]) / width, 
-                (bounds[1][1] - bounds[0][1]) / height),
-        transl = [(width - scale * (bounds[1][0] + bounds[0][0])) / 2 + 171/0.0023374678127024*scale, 
-                (height - scale * (bounds[1][1] + bounds[0][1])) / 2 + 85/0.0023374678127024*scale];
-    console.log(scale);
-    console.log(transl);
-    console.log(bounds);
-    projection.scale(scale).translate(transl);
-
-    console.log('drawing');
-    g.selectAll( "path" )
-      .data( data.features )
-      .enter()
-      .append( "path" )
-      .attr( "fill", "#ccc" )
-      .attr( "d", path )
-      .attr( "stroke", "red")
-      .on('mouseover', function(d) {d3.select(this).attr( "fill", "blue")});
-
-    console.log('done drawing');
-
-  }, "json");
-
-
-
-
-  </script>
+  <div id="mapUI"></div>
+  <script src="bundle.js"></script>
 </body>
 </html>
