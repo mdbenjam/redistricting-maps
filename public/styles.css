@@ -15,7 +15,7 @@
   bottom: 0;
   left: 0;
   right: 0;
-  height: 100px;
+  height: 120px;
 }
 
 .map {
@@ -23,7 +23,8 @@
   left: 0;
   right: 0;
   top: 0;
-  bottom: 100px;
+  bottom: 120px;
+  overflow: hidden;
 }
 
 .main {
@@ -43,3 +44,57 @@ body {
   font-family: 'Roboto', sans-serif;  
 }
 
+@keyframes slide-in {
+    from {
+      left: 300px;
+    }
+    to {
+      left: 0px;
+    }
+}
+
+.sidebar-slide-in {
+  animation-name: slide-in;
+  animation-duration: .5s;
+}
+
+.sidebar-slide-out {
+  animation-name: slide-in;
+  animation-duration: .5s;
+  animation-direction: reverse;
+}
+
+.sidebar-demographics-page-out {
+  position: absolute;
+  top: 0;
+  left: 300px;
+}
+
+.sidebar-demographics-page-in {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.button-spacing {
+  margin: 10px;
+}
+
+.left {
+  display: inline-block;
+  text-align: center;
+  width: 33.3%;
+  vertical-align: middle;
+}
+.right {
+  display: inline-block;
+  text-align: center;
+  width: 33.3%;
+  vertical-align: middle;
+}
+.middle {
+  display: inline-block;
+  text-align: center;
+  width: 33.3%;
+  vertical-align: middle;
+}

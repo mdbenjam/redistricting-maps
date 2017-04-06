@@ -8,6 +8,28 @@ import request from 'superagent';
 const NUMBER_OF_CONGRESSIONAL_DISTRICTS = 11;
 
 export default class Sidebar extends React.Component {
+  constructor(props) {
+    super(props);
+
+    this.state = {
+      sliding: false
+    };
+  }
+
+  onSlideEnd() {
+    this.setState({
+      sliding: false
+    });
+  }
+
+  componentWillReceiveProps(nextProps) {
+    if (this.props.showDemographics !== nextProps.showDemographics) {
+      this.setState({
+        sliding: true
+      });
+    }
+  }
+
   render() {
     let districts = [];
 
@@ -25,8 +47,23 @@ export default class Sidebar extends React.Component {
         </TableRow>);
     }
 
+    let className;
+    if (this.props.showDemographics) {
+      className = "sidebar-demographics-page-in";
+      if (this.state.sliding) {
+        className = className + " sidebar-slide-in";
+      }
+    }
+
+    if (!this.props.showDemographics) {
+      className = "sidebar-demographics-page-out";
+      if (this.state.sliding) {
+        className = className + " sidebar-slide-out";
+      }
+    }
+
     return <div>
-        <Paper className="sidebar-paper" zDepth={3} rounded={false}>
+        <Paper className="sidebar-paper" zDepth={2} rounded={false}>
           <div className="">
             <Table onRowSelection={(rows) => {this.props.onChangeDistrict(rows[0])}}>
               <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
@@ -41,6 +78,23 @@ export default class Sidebar extends React.Component {
             </Table>
           </div>
         </Paper>
+        <div className={className} onAnimationEnd={this.onSlideEnd.bind(this)}>
+          <Paper className="sidebar-paper" zDepth={3} rounded={false}>
+            <div className="">
+              <Table onRowSelection={(rows) => {this.props.onChangeDistrict(rows[0])}}>
+                <TableHeader displaySelectAll={false} adjustForCheckbox={false}>
+                  <TableRow>
+                    <TableHeaderColumn>Demographics</TableHeaderColumn>
+                    <TableHeaderColumn>Demographics</TableHeaderColumn>
+                  </TableRow>
+                </TableHeader>
+                <TableBody displayRowCheckbox={false} deselectOnClickaway={false}>
+                  {districts}
+                </TableBody>
+              </Table>
+            </div>
+          </Paper>
+        </div>
       </div>;
   }
 }
@@ -50,5 +104,6 @@ Sidebar.propTypes = {
   districts: PropTypes.array,
   demographics: PropTypes.object,
   onChangeDistrict: PropTypes.func,
-  districtIndex: PropTypes.number
+  districtIndex: PropTypes.number,
+  showDemographics: PropTypes.bool
 };

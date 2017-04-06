@@ -29,7 +29,11 @@ export default class MapUI extends React.Component {
 
     this.state = {
       districts: [],
-      districtIndex: 0
+      districtIndex: 0,
+      showDemographics: false,
+      zoomRate: 1,
+      zoom: 1,
+      coordinates: {x: 0, y: 0}
     };
   }
 
@@ -71,6 +75,68 @@ export default class MapUI extends React.Component {
     });
   }
 
+  onToggleDemographics() {
+    this.setState({
+      showDemographics: !this.state.showDemographics
+    });
+  }
+
+  onZoomIn() {
+    this.setState({
+      zoomRate: 2
+    });
+  }
+
+  onZoomOut() {
+    let zoomRate = .5;
+    let zoom = this.state.zoom * zoomRate;
+    if (zoom < 1) {
+      return;
+    }
+    
+    if (zoom === 1) {
+      this.setState({
+        zoom,
+        coordinates: {
+          x: 0,
+          y: 0
+        }
+      });
+    } else {
+      let coordinates = {
+        x: (this.state.coordinates.x) * zoomRate,
+        y: (this.state.coordinates.y) * zoomRate
+      };
+      this.setState({
+        zoom,
+        coordinates
+      });
+    }
+  }
+
+  onMapClick(event) {
+    if (this.state.zoomRate > 1) {
+      let map = document.getElementById('map');
+      let tx = this.state.coordinates.x;
+      let ty = this.state.coordinates.y;
+      let cx = map.clientWidth / 2;
+      let cy = map.clientHeight / 2;
+      let ex = event.clientX;
+      let ey = event.clientY;
+
+      let coordinates = {
+        x: (tx + cx - ex) * this.state.zoomRate,
+        y: (ty + cy - ey) * this.state.zoomRate
+      };
+
+      this.setState({
+        zoom: this.state.zoom * this.state.zoomRate,
+        zoomRate: 1,
+        coordinates
+      });
+    }
+  }
+
   render() {
     return <MuiThemeProvider>
         <div>
@@ -80,10 +146,19 @@ export default class MapUI extends React.Component {
                 mouseOverPrecinct={this.mouseOverPrecinct.bind(this)}
                 numDistricts={NUMBER_OF_CONGRESSIONAL_DISTRICTS}
                 color={COLORS[this.state.districtIndex]}
+                onMapClick={this.onMapClick.bind(this)}
+                zoom={this.state.zoom}
+                coordinates={this.state.coordinates}
+                isZooming={this.state.zoomRate !== 1}
               />
             </div>
             <div className="bottomControl">
-              <BottomControl />
+              <BottomControl
+                onToggleDemographics={this.onToggleDemographics.bind(this)}
+                onZoomIn={this.onZoomIn.bind(this)}
+                onZoomOut={this.onZoomOut.bind(this)}
+                showDemographicsButton={!this.state.showDemographics}
+              />
             </div>
           </div>
           <div className="sidebar">
@@ -93,6 +168,7 @@ export default class MapUI extends React.Component {
               districts={this.state.districts}
               onChangeDistrict={this.onChangeDistrict.bind(this)}
               districtIndex={this.state.districtIndex}
+              showDemographics={this.state.showDemographics}
             />
           </div>
         </div>

@@ -6,7 +6,6 @@ import request from 'superagent';
 import * as d3 from 'd3';
 
 export default class Virginia extends React.Component {
-  
   drawMap() {
     request.get('data/virginia/map').then((response) => {
       let data = JSON.parse(response.text);
@@ -31,7 +30,7 @@ export default class Virginia extends React.Component {
             scale  = 10 * .95 / Math.max((bounds[1][0] - bounds[0][0]) / width, 
                     (bounds[1][1] - bounds[0][1]) / height),
             transl = [(width - scale * (bounds[1][0] + bounds[0][0])) / 2 + 171/0.0023374678127024*scale, 
-                    (height - scale * (bounds[1][1] + bounds[0][1])) / 2 + 85/0.0023374678127024*scale];
+                    (height - scale * (bounds[1][1] + bounds[0][1])) / 2 + 88/0.0023374678127024*scale];
 
         projection.scale(scale).translate(transl);
 
@@ -43,7 +42,8 @@ export default class Virginia extends React.Component {
           .append( "path" )
           .attr( "fill", "#ccc" )
           .attr( "d", path )
-          .attr( "stroke", "red");
+          .attr( "stroke", "red")
+          .attr( "stroke-width", .2);
         console.log('done drawing');
         }).
       catch(() => {
@@ -72,16 +72,30 @@ export default class Virginia extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    let g = d3.select( "#virginiaMap" ).select("g");
-    g.selectAll( "path" ).on('mousedown', this.colorPrecinct(nextProps.color, nextProps.mouseOverPrecinct));
+    if (!nextProps.isZooming) {
+      let g = d3.select( "#virginiaMap" ).select("g");
+      g.selectAll( "path" ).on('mousedown', this.colorPrecinct(nextProps.color, nextProps.mouseOverPrecinct));
+    }
   }
 
   onMouseDown(event) {
-    this.setMouseOverEvent(this.props.color, this.props.mouseOverPrecinct);
+    if (!this.props.isZooming) {
+      this.setMouseOverEvent(this.props.color, this.props.mouseOverPrecinct);
+    }
   }
 
   onMouseUp(event) {
-    this.removeMouseOverEvent();
+    if (this.props.isZooming) {
+      this.props.onMapClick(event);
+    } else {
+      this.removeMouseOverEvent();
+    }
+  }
+
+  onMouseLeave(event) {
+    if (!this.props.isZooming) {
+      this.removeMouseOverEvent();
+    }
   }
 
   render() {
@@ -89,8 +103,9 @@ export default class Virginia extends React.Component {
         <div
           onMouseDown={this.onMouseDown.bind(this)}
           onMouseUp={this.onMouseUp.bind(this)}
-          onMouseLeave={this.onMouseUp.bind(this)}
+          onMouseLeave={this.onMouseLeave.bind(this)}
           id="virginiaMap"
+          style={{transform: `translate(${this.props.coordinates.x}px, ${this.props.coordinates.y}px) scale(${this.props.zoom})`}}
         />
       </div>
   }
@@ -98,5 +113,9 @@ export default class Virginia extends React.Component {
 
 Virginia.propTypes = {
   mouseOverPrecinct: PropTypes.func.isRequired,
-  numDistricts: PropTypes.number
+  onMapClick: PropTypes.func,
+  numDistricts: PropTypes.number,
+  zoom: PropTypes.number,
+  coordinates: PropTypes.object,
+  isZooming: PropTypes.bool
 };

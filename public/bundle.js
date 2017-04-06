@@ -11010,7 +11010,11 @@ var MapUI = function (_React$Component) {
 
     _this.state = {
       districts: [],
-      districtIndex: 0
+      districtIndex: 0,
+      showDemographics: false,
+      zoomRate: 1,
+      zoom: 1,
+      coordinates: { x: 0, y: 0 }
     };
     return _this;
   }
@@ -11061,6 +11065,72 @@ var MapUI = function (_React$Component) {
       });
     }
   }, {
+    key: 'onToggleDemographics',
+    value: function onToggleDemographics() {
+      this.setState({
+        showDemographics: !this.state.showDemographics
+      });
+    }
+  }, {
+    key: 'onZoomIn',
+    value: function onZoomIn() {
+      this.setState({
+        zoomRate: 2
+      });
+    }
+  }, {
+    key: 'onZoomOut',
+    value: function onZoomOut() {
+      var zoomRate = .5;
+      var zoom = this.state.zoom * zoomRate;
+      if (zoom < 1) {
+        return;
+      }
+
+      if (zoom === 1) {
+        this.setState({
+          zoom: zoom,
+          coordinates: {
+            x: 0,
+            y: 0
+          }
+        });
+      } else {
+        var coordinates = {
+          x: this.state.coordinates.x * zoomRate,
+          y: this.state.coordinates.y * zoomRate
+        };
+        this.setState({
+          zoom: zoom,
+          coordinates: coordinates
+        });
+      }
+    }
+  }, {
+    key: 'onMapClick',
+    value: function onMapClick(event) {
+      if (this.state.zoomRate > 1) {
+        var map = document.getElementById('map');
+        var tx = this.state.coordinates.x;
+        var ty = this.state.coordinates.y;
+        var cx = map.clientWidth / 2;
+        var cy = map.clientHeight / 2;
+        var ex = event.clientX;
+        var ey = event.clientY;
+
+        var coordinates = {
+          x: (tx + cx - ex) * this.state.zoomRate,
+          y: (ty + cy - ey) * this.state.zoomRate
+        };
+
+        this.setState({
+          zoom: this.state.zoom * this.state.zoomRate,
+          zoomRate: 1,
+          coordinates: coordinates
+        });
+      }
+    }
+  }, {
     key: 'render',
     value: function render() {
       return _react2.default.createElement(
@@ -11078,13 +11148,22 @@ var MapUI = function (_React$Component) {
               _react2.default.createElement(_virginia2.default, {
                 mouseOverPrecinct: this.mouseOverPrecinct.bind(this),
                 numDistricts: NUMBER_OF_CONGRESSIONAL_DISTRICTS,
-                color: COLORS[this.state.districtIndex]
+                color: COLORS[this.state.districtIndex],
+                onMapClick: this.onMapClick.bind(this),
+                zoom: this.state.zoom,
+                coordinates: this.state.coordinates,
+                isZooming: this.state.zoomRate !== 1
               })
             ),
             _react2.default.createElement(
               'div',
               { className: 'bottomControl' },
-              _react2.default.createElement(_bottomControl2.default, null)
+              _react2.default.createElement(_bottomControl2.default, {
+                onToggleDemographics: this.onToggleDemographics.bind(this),
+                onZoomIn: this.onZoomIn.bind(this),
+                onZoomOut: this.onZoomOut.bind(this),
+                showDemographicsButton: !this.state.showDemographics
+              })
             )
           ),
           _react2.default.createElement(
@@ -11095,7 +11174,8 @@ var MapUI = function (_React$Component) {
               demographics: this.demographics,
               districts: this.state.districts,
               onChangeDistrict: this.onChangeDistrict.bind(this),
-              districtIndex: this.state.districtIndex
+              districtIndex: this.state.districtIndex,
+              showDemographics: this.state.showDemographics
             })
           )
         )
@@ -11241,13 +11321,34 @@ var NUMBER_OF_CONGRESSIONAL_DISTRICTS = 11;
 var Sidebar = function (_React$Component) {
   _inherits(Sidebar, _React$Component);
 
-  function Sidebar() {
+  function Sidebar(props) {
     _classCallCheck(this, Sidebar);
 
-    return _possibleConstructorReturn(this, (Sidebar.__proto__ || Object.getPrototypeOf(Sidebar)).apply(this, arguments));
+    var _this = _possibleConstructorReturn(this, (Sidebar.__proto__ || Object.getPrototypeOf(Sidebar)).call(this, props));
+
+    _this.state = {
+      sliding: false
+    };
+    return _this;
   }
 
   _createClass(Sidebar, [{
+    key: 'onSlideEnd',
+    value: function onSlideEnd() {
+      this.setState({
+        sliding: false
+      });
+    }
+  }, {
+    key: 'componentWillReceiveProps',
+    value: function componentWillReceiveProps(nextProps) {
+      if (this.props.showDemographics !== nextProps.showDemographics) {
+        this.setState({
+          sliding: true
+        });
+      }
+    }
+  }, {
     key: 'render',
     value: function render() {
       var _this2 = this;
@@ -11277,12 +11378,27 @@ var Sidebar = function (_React$Component) {
         ));
       }
 
+      var className = void 0;
+      if (this.props.showDemographics) {
+        className = "sidebar-demographics-page-in";
+        if (this.state.sliding) {
+          className = className + " sidebar-slide-in";
+        }
+      }
+
+      if (!this.props.showDemographics) {
+        className = "sidebar-demographics-page-out";
+        if (this.state.sliding) {
+          className = className + " sidebar-slide-out";
+        }
+      }
+
       return _react2.default.createElement(
         'div',
         null,
         _react2.default.createElement(
           _Paper2.default,
-          { className: 'sidebar-paper', zDepth: 3, rounded: false },
+          { className: 'sidebar-paper', zDepth: 2, rounded: false },
           _react2.default.createElement(
             'div',
             { className: '' },
@@ -11316,6 +11432,47 @@ var Sidebar = function (_React$Component) {
               )
             )
           )
+        ),
+        _react2.default.createElement(
+          'div',
+          { className: className, onAnimationEnd: this.onSlideEnd.bind(this) },
+          _react2.default.createElement(
+            _Paper2.default,
+            { className: 'sidebar-paper', zDepth: 3, rounded: false },
+            _react2.default.createElement(
+              'div',
+              { className: '' },
+              _react2.default.createElement(
+                _Table.Table,
+                { onRowSelection: function onRowSelection(rows) {
+                    _this2.props.onChangeDistrict(rows[0]);
+                  } },
+                _react2.default.createElement(
+                  _Table.TableHeader,
+                  { displaySelectAll: false, adjustForCheckbox: false },
+                  _react2.default.createElement(
+                    _Table.TableRow,
+                    null,
+                    _react2.default.createElement(
+                      _Table.TableHeaderColumn,
+                      null,
+                      'Demographics'
+                    ),
+                    _react2.default.createElement(
+                      _Table.TableHeaderColumn,
+                      null,
+                      'Demographics'
+                    )
+                  )
+                ),
+                _react2.default.createElement(
+                  _Table.TableBody,
+                  { displayRowCheckbox: false, deselectOnClickaway: false },
+                  districts
+                )
+              )
+            )
+          )
         )
       );
     }
@@ -11332,7 +11489,8 @@ Sidebar.propTypes = {
   districts: _react.PropTypes.array,
   demographics: _react.PropTypes.object,
   onChangeDistrict: _react.PropTypes.func,
-  districtIndex: _react.PropTypes.number
+  districtIndex: _react.PropTypes.number,
+  showDemographics: _react.PropTypes.bool
 };
 
 /***/ }),
@@ -11411,13 +11569,13 @@ var Virginia = function (_React$Component) {
 
         var bounds = path.bounds(data),
             scale = 10 * .95 / Math.max((bounds[1][0] - bounds[0][0]) / width, (bounds[1][1] - bounds[0][1]) / height),
-            transl = [(width - scale * (bounds[1][0] + bounds[0][0])) / 2 + 171 / 0.0023374678127024 * scale, (height - scale * (bounds[1][1] + bounds[0][1])) / 2 + 85 / 0.0023374678127024 * scale];
+            transl = [(width - scale * (bounds[1][0] + bounds[0][0])) / 2 + 171 / 0.0023374678127024 * scale, (height - scale * (bounds[1][1] + bounds[0][1])) / 2 + 88 / 0.0023374678127024 * scale];
 
         projection.scale(scale).translate(transl);
 
         console.log('drawing');
         var component = _this2;
-        var paths = g.selectAll("path").data(data.features).enter().append("path").attr("fill", "#ccc").attr("d", path).attr("stroke", "red");
+        var paths = g.selectAll("path").data(data.features).enter().append("path").attr("fill", "#ccc").attr("d", path).attr("stroke", "red").attr("stroke-width", .2);
         console.log('done drawing');
       }).catch(function () {});
     }
@@ -11449,18 +11607,33 @@ var Virginia = function (_React$Component) {
   }, {
     key: 'componentWillReceiveProps',
     value: function componentWillReceiveProps(nextProps) {
-      var g = d3.select("#virginiaMap").select("g");
-      g.selectAll("path").on('mousedown', this.colorPrecinct(nextProps.color, nextProps.mouseOverPrecinct));
+      if (!nextProps.isZooming) {
+        var g = d3.select("#virginiaMap").select("g");
+        g.selectAll("path").on('mousedown', this.colorPrecinct(nextProps.color, nextProps.mouseOverPrecinct));
+      }
     }
   }, {
     key: 'onMouseDown',
     value: function onMouseDown(event) {
-      this.setMouseOverEvent(this.props.color, this.props.mouseOverPrecinct);
+      if (!this.props.isZooming) {
+        this.setMouseOverEvent(this.props.color, this.props.mouseOverPrecinct);
+      }
     }
   }, {
     key: 'onMouseUp',
     value: function onMouseUp(event) {
-      this.removeMouseOverEvent();
+      if (this.props.isZooming) {
+        this.props.onMapClick(event);
+      } else {
+        this.removeMouseOverEvent();
+      }
+    }
+  }, {
+    key: 'onMouseLeave',
+    value: function onMouseLeave(event) {
+      if (!this.props.isZooming) {
+        this.removeMouseOverEvent();
+      }
     }
   }, {
     key: 'render',
@@ -11471,8 +11644,9 @@ var Virginia = function (_React$Component) {
         _react2.default.createElement('div', {
           onMouseDown: this.onMouseDown.bind(this),
           onMouseUp: this.onMouseUp.bind(this),
-          onMouseLeave: this.onMouseUp.bind(this),
-          id: 'virginiaMap'
+          onMouseLeave: this.onMouseLeave.bind(this),
+          id: 'virginiaMap',
+          style: { transform: 'translate(' + this.props.coordinates.x + 'px, ' + this.props.coordinates.y + 'px) scale(' + this.props.zoom + ')' }
         })
       );
     }
@@ -11486,7 +11660,11 @@ exports.default = Virginia;
 
 Virginia.propTypes = {
   mouseOverPrecinct: _react.PropTypes.func.isRequired,
-  numDistricts: _react.PropTypes.number
+  onMapClick: _react.PropTypes.func,
+  numDistricts: _react.PropTypes.number,
+  zoom: _react.PropTypes.number,
+  coordinates: _react.PropTypes.object,
+  isZooming: _react.PropTypes.bool
 };
 
 /***/ }),
@@ -56143,6 +56321,10 @@ var _RaisedButton = __webpack_require__(417);
 
 var _RaisedButton2 = _interopRequireDefault(_RaisedButton);
 
+var _FloatingActionButton = __webpack_require__(476);
+
+var _FloatingActionButton2 = _interopRequireDefault(_FloatingActionButton);
+
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
@@ -56167,14 +56349,54 @@ var BottomControl = function (_React$Component) {
         'div',
         null,
         _react2.default.createElement(
-          _reactInlineGrid.Grid,
+          'div',
           null,
           _react2.default.createElement(
-            _reactInlineGrid.Row,
-            { is: 'center' },
-            _react2.default.createElement(_RaisedButton2.default, { label: 'See Demographics', primary: true })
+            'span',
+            { className: 'left' },
+            _react2.default.createElement(
+              _FloatingActionButton2.default,
+              {
+                mini: true,
+                className: 'button-spacing',
+                onClick: this.props.onZoomOut
+              },
+              _react2.default.createElement(
+                'i',
+                { className: 'material-icons' },
+                'zoom_out'
+              )
+            )
+          ),
+          _react2.default.createElement(
+            'span',
+            { className: 'middle' },
+            _react2.default.createElement(_RaisedButton2.default, {
+              className: 'button-spacing',
+              onClick: this.props.onToggleDemographics,
+              label: this.props.showDemographicsButton ? "See Demographics" : "See Population",
+              primary: true
+            })
+          ),
+          _react2.default.createElement(
+            'span',
+            { className: 'right' },
+            _react2.default.createElement(
+              _FloatingActionButton2.default,
+              {
+                mini: true,
+                className: 'button-spacing',
+                onClick: this.props.onZoomIn
+              },
+              _react2.default.createElement(
+                'i',
+                { className: 'material-icons' },
+                'zoom_in'
+              )
+            )
           )
-        )
+        ),
+        _react2.default.createElement('div', null)
       );
     }
   }]);
@@ -56182,11 +56404,15 @@ var BottomControl = function (_React$Component) {
   return BottomControl;
 }(_react2.default.Component);
 
-// BottomControl.propTypes = {
-// };
-
-
 exports.default = BottomControl;
+
+
+BottomControl.propTypes = {
+  onShowDemographics: _react.PropTypes.func,
+  onZoomOut: _react.PropTypes.func,
+  onZoomIn: _react.PropTypes.func,
+  showDemographicsButton: _react.PropTypes.bool
+};
 
 /***/ }),
 /* 422 */
@@ -59004,6 +59230,602 @@ function pick(obj, fn) {
 }
 
 module.exports = exports["default"];
+
+/***/ }),
+/* 475 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends2 = __webpack_require__(269);
+
+var _extends3 = _interopRequireDefault(_extends2);
+
+var _objectWithoutProperties2 = __webpack_require__(270);
+
+var _objectWithoutProperties3 = _interopRequireDefault(_objectWithoutProperties2);
+
+var _getPrototypeOf = __webpack_require__(265);
+
+var _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf);
+
+var _classCallCheck2 = __webpack_require__(125);
+
+var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+var _createClass2 = __webpack_require__(126);
+
+var _createClass3 = _interopRequireDefault(_createClass2);
+
+var _possibleConstructorReturn2 = __webpack_require__(267);
+
+var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);
+
+var _inherits2 = __webpack_require__(266);
+
+var _inherits3 = _interopRequireDefault(_inherits2);
+
+var _simpleAssign = __webpack_require__(268);
+
+var _simpleAssign2 = _interopRequireDefault(_simpleAssign);
+
+var _react = __webpack_require__(43);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _transitions = __webpack_require__(271);
+
+var _transitions2 = _interopRequireDefault(_transitions);
+
+var _colorManipulator = __webpack_require__(372);
+
+var _EnhancedButton = __webpack_require__(418);
+
+var _EnhancedButton2 = _interopRequireDefault(_EnhancedButton);
+
+var _FontIcon = __webpack_require__(478);
+
+var _FontIcon2 = _interopRequireDefault(_FontIcon);
+
+var _Paper = __webpack_require__(328);
+
+var _Paper2 = _interopRequireDefault(_Paper);
+
+var _childUtils = __webpack_require__(414);
+
+var _warning = __webpack_require__(280);
+
+var _warning2 = _interopRequireDefault(_warning);
+
+var _propTypes = __webpack_require__(348);
+
+var _propTypes2 = _interopRequireDefault(_propTypes);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getStyles(props, context) {
+  var floatingActionButton = context.muiTheme.floatingActionButton;
+
+
+  var backgroundColor = props.backgroundColor || floatingActionButton.color;
+  var iconColor = floatingActionButton.iconColor;
+
+  if (props.disabled) {
+    backgroundColor = props.disabledColor || floatingActionButton.disabledColor;
+    iconColor = floatingActionButton.disabledTextColor;
+  } else if (props.secondary) {
+    backgroundColor = floatingActionButton.secondaryColor;
+    iconColor = floatingActionButton.secondaryIconColor;
+  }
+
+  return {
+    root: {
+      transition: _transitions2.default.easeOut(),
+      display: 'inline-block',
+      backgroundColor: 'transparent'
+    },
+    container: {
+      backgroundColor: backgroundColor,
+      transition: _transitions2.default.easeOut(),
+      height: floatingActionButton.buttonSize,
+      width: floatingActionButton.buttonSize,
+      padding: 0,
+      overflow: 'hidden',
+      borderRadius: '50%',
+      textAlign: 'center',
+      verticalAlign: 'bottom'
+    },
+    containerWhenMini: {
+      height: floatingActionButton.miniSize,
+      width: floatingActionButton.miniSize
+    },
+    overlay: {
+      transition: _transitions2.default.easeOut(),
+      top: 0
+    },
+    overlayWhenHovered: {
+      backgroundColor: (0, _colorManipulator.fade)(iconColor, 0.4)
+    },
+    icon: {
+      height: floatingActionButton.buttonSize,
+      lineHeight: floatingActionButton.buttonSize + 'px',
+      fill: iconColor,
+      color: iconColor
+    },
+    iconWhenMini: {
+      height: floatingActionButton.miniSize,
+      lineHeight: floatingActionButton.miniSize + 'px'
+    }
+  };
+}
+
+var FloatingActionButton = function (_Component) {
+  (0, _inherits3.default)(FloatingActionButton, _Component);
+
+  function FloatingActionButton() {
+    var _ref;
+
+    var _temp, _this, _ret;
+
+    (0, _classCallCheck3.default)(this, FloatingActionButton);
+
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return _ret = (_temp = (_this = (0, _possibleConstructorReturn3.default)(this, (_ref = FloatingActionButton.__proto__ || (0, _getPrototypeOf2.default)(FloatingActionButton)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
+      hovered: false,
+      touch: false,
+      zDepth: undefined
+    }, _this.handleMouseDown = function (event) {
+      // only listen to left clicks
+      if (event.button === 0) {
+        _this.setState({ zDepth: _this.props.zDepth + 1 });
+      }
+      if (_this.props.onMouseDown) _this.props.onMouseDown(event);
+    }, _this.handleMouseUp = function (event) {
+      _this.setState({ zDepth: _this.props.zDepth });
+      if (_this.props.onMouseUp) {
+        _this.props.onMouseUp(event);
+      }
+    }, _this.handleMouseLeave = function (event) {
+      if (!_this.refs.container.isKeyboardFocused()) {
+        _this.setState({ zDepth: _this.props.zDepth, hovered: false });
+      }
+      if (_this.props.onMouseLeave) {
+        _this.props.onMouseLeave(event);
+      }
+    }, _this.handleMouseEnter = function (event) {
+      if (!_this.refs.container.isKeyboardFocused() && !_this.state.touch) {
+        _this.setState({ hovered: true });
+      }
+      if (_this.props.onMouseEnter) {
+        _this.props.onMouseEnter(event);
+      }
+    }, _this.handleTouchStart = function (event) {
+      _this.setState({
+        touch: true,
+        zDepth: _this.props.zDepth + 1
+      });
+      if (_this.props.onTouchStart) {
+        _this.props.onTouchStart(event);
+      }
+    }, _this.handleTouchEnd = function (event) {
+      _this.setState({
+        touch: true,
+        zDepth: _this.props.zDepth
+      });
+      if (_this.props.onTouchEnd) {
+        _this.props.onTouchEnd(event);
+      }
+    }, _this.handleKeyboardFocus = function (event, keyboardFocused) {
+      if (keyboardFocused && !_this.props.disabled) {
+        _this.setState({ zDepth: _this.props.zDepth + 1 });
+        _this.refs.overlay.style.backgroundColor = (0, _colorManipulator.fade)(getStyles(_this.props, _this.context).icon.color, 0.4);
+      } else if (!_this.state.hovered) {
+        _this.setState({ zDepth: _this.props.zDepth });
+        _this.refs.overlay.style.backgroundColor = 'transparent';
+      }
+    }, _temp), (0, _possibleConstructorReturn3.default)(_this, _ret);
+  }
+
+  (0, _createClass3.default)(FloatingActionButton, [{
+    key: 'componentWillMount',
+    value: function componentWillMount() {
+      this.setState({
+        zDepth: this.props.disabled ? 0 : this.props.zDepth
+      });
+    }
+  }, {
+    key: 'componentDidMount',
+    value: function componentDidMount() {
+      process.env.NODE_ENV !== "production" ? (0, _warning2.default)(!this.props.iconClassName || !this.props.children, 'Material-UI: You have set both an iconClassName and a child icon. ' + 'It is recommended you use only one method when adding ' + 'icons to FloatingActionButtons.') : void 0;
+    }
+  }, {
+    key: 'componentWillReceiveProps',
+    value: function componentWillReceiveProps(nextProps) {
+      var nextState = {};
+
+      if (nextProps.disabled !== this.props.disabled) {
+        nextState.zDepth = nextProps.disabled ? 0 : this.props.zDepth;
+      }
+      if (nextProps.disabled) {
+        nextState.hovered = false;
+      }
+
+      this.setState(nextState);
+    }
+  }, {
+    key: 'render',
+    value: function render() {
+      var _props = this.props,
+          backgroundColor = _props.backgroundColor,
+          className = _props.className,
+          childrenProp = _props.children,
+          disabled = _props.disabled,
+          disabledColor = _props.disabledColor,
+          mini = _props.mini,
+          secondary = _props.secondary,
+          iconStyle = _props.iconStyle,
+          iconClassName = _props.iconClassName,
+          zDepth = _props.zDepth,
+          other = (0, _objectWithoutProperties3.default)(_props, ['backgroundColor', 'className', 'children', 'disabled', 'disabledColor', 'mini', 'secondary', 'iconStyle', 'iconClassName', 'zDepth']);
+      var prepareStyles = this.context.muiTheme.prepareStyles;
+
+      var styles = getStyles(this.props, this.context);
+
+      var iconElement = void 0;
+      if (iconClassName) {
+        iconElement = _react2.default.createElement(_FontIcon2.default, {
+          className: iconClassName,
+          style: (0, _simpleAssign2.default)({}, styles.icon, mini && styles.iconWhenMini, iconStyle)
+        });
+      }
+
+      var children = void 0;
+
+      if (childrenProp) {
+        children = (0, _childUtils.extendChildren)(childrenProp, function (child) {
+          return {
+            style: (0, _simpleAssign2.default)({}, styles.icon, mini && styles.iconWhenMini, iconStyle, child.props.style)
+          };
+        });
+      }
+
+      var buttonEventHandlers = disabled ? null : {
+        onMouseDown: this.handleMouseDown,
+        onMouseUp: this.handleMouseUp,
+        onMouseLeave: this.handleMouseLeave,
+        onMouseEnter: this.handleMouseEnter,
+        onTouchStart: this.handleTouchStart,
+        onTouchEnd: this.handleTouchEnd,
+        onKeyboardFocus: this.handleKeyboardFocus
+      };
+
+      return _react2.default.createElement(
+        _Paper2.default,
+        {
+          className: className,
+          style: (0, _simpleAssign2.default)(styles.root, this.props.style),
+          zDepth: this.state.zDepth,
+          circle: true
+        },
+        _react2.default.createElement(
+          _EnhancedButton2.default,
+          (0, _extends3.default)({}, other, buttonEventHandlers, {
+            ref: 'container',
+            disabled: disabled,
+            style: (0, _simpleAssign2.default)(styles.container, this.props.mini && styles.containerWhenMini, iconStyle),
+            focusRippleColor: styles.icon.color,
+            touchRippleColor: styles.icon.color
+          }),
+          _react2.default.createElement(
+            'div',
+            {
+              ref: 'overlay',
+              style: prepareStyles((0, _simpleAssign2.default)(styles.overlay, this.state.hovered && !this.props.disabled && styles.overlayWhenHovered))
+            },
+            iconElement,
+            children
+          )
+        )
+      );
+    }
+  }]);
+  return FloatingActionButton;
+}(_react.Component);
+
+FloatingActionButton.defaultProps = {
+  disabled: false,
+  mini: false,
+  secondary: false,
+  zDepth: 2
+};
+FloatingActionButton.contextTypes = {
+  muiTheme: _react.PropTypes.object.isRequired
+};
+process.env.NODE_ENV !== "production" ? FloatingActionButton.propTypes = {
+  /**
+   * This value will override the default background color for the button.
+   * However it will not override the default disabled background color.
+   * This has to be set separately using the disabledColor attribute.
+   */
+  backgroundColor: _react.PropTypes.string,
+  /**
+   * This is what displayed inside the floating action button; for example, a SVG Icon.
+   */
+  children: _react.PropTypes.node,
+  /**
+   * The css class name of the root element.
+   */
+  className: _react.PropTypes.string,
+  /**
+   * Disables the button if set to true.
+   */
+  disabled: _react.PropTypes.bool,
+  /**
+   * This value will override the default background color for the button when it is disabled.
+   */
+  disabledColor: _react.PropTypes.string,
+  /**
+   * The URL to link to when the button is clicked.
+   */
+  href: _react.PropTypes.string,
+  /**
+   * The icon within the FloatingActionButton is a FontIcon component.
+   * This property is the classname of the icon to be displayed inside the button.
+   * An alternative to adding an iconClassName would be to manually insert a
+   * FontIcon component or custom SvgIcon component or as a child of FloatingActionButton.
+   */
+  iconClassName: _react.PropTypes.string,
+  /**
+   * This is the equivalent to iconClassName except that it is used for
+   * overriding the inline-styles of the FontIcon component.
+   */
+  iconStyle: _react.PropTypes.object,
+  /**
+   * If true, the button will be a small floating action button.
+   */
+  mini: _react.PropTypes.bool,
+  /** @ignore */
+  onMouseDown: _react.PropTypes.func,
+  /** @ignore */
+  onMouseEnter: _react.PropTypes.func,
+  /** @ignore */
+  onMouseLeave: _react.PropTypes.func,
+  /** @ignore */
+  onMouseUp: _react.PropTypes.func,
+  /** @ignore */
+  onTouchEnd: _react.PropTypes.func,
+  /** @ignore */
+  onTouchStart: _react.PropTypes.func,
+  /**
+   * Callback function fired when the button is touch-tapped.
+   *
+   * @param {object} event TouchTap event targeting the button.
+   */
+  onTouchTap: _react.PropTypes.func,
+  /**
+   * If true, the button will use the secondary button colors.
+   */
+  secondary: _react.PropTypes.bool,
+  /**
+   * Override the inline-styles of the root element.
+   */
+  style: _react.PropTypes.object,
+  /**
+   * The zDepth of the underlying `Paper` component.
+   */
+  zDepth: _propTypes2.default.zDepth
+} : void 0;
+exports.default = FloatingActionButton;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 476 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = undefined;
+
+var _FloatingActionButton = __webpack_require__(475);
+
+var _FloatingActionButton2 = _interopRequireDefault(_FloatingActionButton);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = _FloatingActionButton2.default;
+
+/***/ }),
+/* 477 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+/* WEBPACK VAR INJECTION */(function(process) {
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+
+var _extends2 = __webpack_require__(269);
+
+var _extends3 = _interopRequireDefault(_extends2);
+
+var _objectWithoutProperties2 = __webpack_require__(270);
+
+var _objectWithoutProperties3 = _interopRequireDefault(_objectWithoutProperties2);
+
+var _getPrototypeOf = __webpack_require__(265);
+
+var _getPrototypeOf2 = _interopRequireDefault(_getPrototypeOf);
+
+var _classCallCheck2 = __webpack_require__(125);
+
+var _classCallCheck3 = _interopRequireDefault(_classCallCheck2);
+
+var _createClass2 = __webpack_require__(126);
+
+var _createClass3 = _interopRequireDefault(_createClass2);
+
+var _possibleConstructorReturn2 = __webpack_require__(267);
+
+var _possibleConstructorReturn3 = _interopRequireDefault(_possibleConstructorReturn2);
+
+var _inherits2 = __webpack_require__(266);
+
+var _inherits3 = _interopRequireDefault(_inherits2);
+
+var _simpleAssign = __webpack_require__(268);
+
+var _simpleAssign2 = _interopRequireDefault(_simpleAssign);
+
+var _react = __webpack_require__(43);
+
+var _react2 = _interopRequireDefault(_react);
+
+var _transitions = __webpack_require__(271);
+
+var _transitions2 = _interopRequireDefault(_transitions);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+function getStyles(props, context, state) {
+  var color = props.color,
+      hoverColor = props.hoverColor;
+  var baseTheme = context.muiTheme.baseTheme;
+
+  var offColor = color || baseTheme.palette.textColor;
+  var onColor = hoverColor || offColor;
+
+  return {
+    root: {
+      color: state.hovered ? onColor : offColor,
+      position: 'relative',
+      fontSize: baseTheme.spacing.iconSize,
+      display: 'inline-block',
+      userSelect: 'none',
+      transition: _transitions2.default.easeOut()
+    }
+  };
+}
+
+var FontIcon = function (_Component) {
+  (0, _inherits3.default)(FontIcon, _Component);
+
+  function FontIcon() {
+    var _ref;
+
+    var _temp, _this, _ret;
+
+    (0, _classCallCheck3.default)(this, FontIcon);
+
+    for (var _len = arguments.length, args = Array(_len), _key = 0; _key < _len; _key++) {
+      args[_key] = arguments[_key];
+    }
+
+    return _ret = (_temp = (_this = (0, _possibleConstructorReturn3.default)(this, (_ref = FontIcon.__proto__ || (0, _getPrototypeOf2.default)(FontIcon)).call.apply(_ref, [this].concat(args))), _this), _this.state = {
+      hovered: false
+    }, _this.handleMouseLeave = function (event) {
+      // hover is needed only when a hoverColor is defined
+      if (_this.props.hoverColor !== undefined) {
+        _this.setState({ hovered: false });
+      }
+      if (_this.props.onMouseLeave) {
+        _this.props.onMouseLeave(event);
+      }
+    }, _this.handleMouseEnter = function (event) {
+      // hover is needed only when a hoverColor is defined
+      if (_this.props.hoverColor !== undefined) {
+        _this.setState({ hovered: true });
+      }
+      if (_this.props.onMouseEnter) {
+        _this.props.onMouseEnter(event);
+      }
+    }, _temp), (0, _possibleConstructorReturn3.default)(_this, _ret);
+  }
+
+  (0, _createClass3.default)(FontIcon, [{
+    key: 'render',
+    value: function render() {
+      var _props = this.props,
+          hoverColor = _props.hoverColor,
+          onMouseLeave = _props.onMouseLeave,
+          onMouseEnter = _props.onMouseEnter,
+          style = _props.style,
+          other = (0, _objectWithoutProperties3.default)(_props, ['hoverColor', 'onMouseLeave', 'onMouseEnter', 'style']);
+      var prepareStyles = this.context.muiTheme.prepareStyles;
+
+      var styles = getStyles(this.props, this.context, this.state);
+
+      return _react2.default.createElement('span', (0, _extends3.default)({}, other, {
+        onMouseLeave: this.handleMouseLeave,
+        onMouseEnter: this.handleMouseEnter,
+        style: prepareStyles((0, _simpleAssign2.default)(styles.root, style))
+      }));
+    }
+  }]);
+  return FontIcon;
+}(_react.Component);
+
+FontIcon.muiName = 'FontIcon';
+FontIcon.defaultProps = {
+  onMouseEnter: function onMouseEnter() {},
+  onMouseLeave: function onMouseLeave() {}
+};
+FontIcon.contextTypes = {
+  muiTheme: _react.PropTypes.object.isRequired
+};
+process.env.NODE_ENV !== "production" ? FontIcon.propTypes = {
+  /**
+   * This is the font color of the font icon. If not specified,
+   * this component will default to muiTheme.palette.textColor.
+   */
+  color: _react.PropTypes.string,
+  /**
+   * This is the icon color when the mouse hovers over the icon.
+   */
+  hoverColor: _react.PropTypes.string,
+  /** @ignore */
+  onMouseEnter: _react.PropTypes.func,
+  /** @ignore */
+  onMouseLeave: _react.PropTypes.func,
+  /**
+   * Override the inline-styles of the root element.
+   */
+  style: _react.PropTypes.object
+} : void 0;
+exports.default = FontIcon;
+/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(0)))
+
+/***/ }),
+/* 478 */
+/***/ (function(module, exports, __webpack_require__) {
+
+"use strict";
+
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = undefined;
+
+var _FontIcon = __webpack_require__(477);
+
+var _FontIcon2 = _interopRequireDefault(_FontIcon);
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+exports.default = _FontIcon2.default;
 
 /***/ })
 /******/ ]);
