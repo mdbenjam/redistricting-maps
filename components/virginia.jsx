@@ -1,40 +1,19 @@
-import React from 'react';
+import React, { PropTypes } from 'react';
 import ReactDOM from 'react-dom';
 import Emitter from 'es6-event-emitter';
 
 import request from 'superagent';
 import * as d3 from 'd3';
 
-const LAST_THREE_DIGITS = 1000;
-
 export default class Virginia extends React.Component {
-  constructor(props) {
-    super(props);
-
-    this.state = {
-      districts: [],
-      districtIndex: 0
-    };
-  }
-
-  mouseOverPrecinct(d) {
-    let districts = [...this.state.districts];
-    if (!districts[this.state.districtIndex]) {
-      districts[this.state.districtIndex] = [];
-    }
-    districts[this.state.districtIndex] = [...districts[this.state.districtIndex] || [], d];
-    this.setState({
-      districts
-    });
-  }
-
+  
   drawMap() {
-    let dispatcher = new Emitter();
-
     request.get('data/virginia/map').then((response) => {
       let data = JSON.parse(response.text);
-        var width = 800,
-            height = 800;
+      let mapDiv = document.getElementById('map');
+
+        let width = mapDiv.offsetWidth;
+        let height = mapDiv.offsetHeight;
 
         var svg = d3.select( "#virginiaMap" )
           .append( "svg" )
@@ -58,51 +37,66 @@ export default class Virginia extends React.Component {
 
         console.log('drawing');
         let component = this;
-        g.selectAll( "path" )
+        let paths = g.selectAll( "path" )
           .data( data.features )
           .enter()
           .append( "path" )
           .attr( "fill", "#ccc" )
           .attr( "d", path )
-          .attr( "stroke", "red")
-          .on('mouseover', function(d) {
-            console.log(d);
-            d3.select(this).attr( "fill", "blue");
-            dispatcher.trigger('precinct:mouseover', d);
-          });
+          .attr( "stroke", "red");
         console.log('done drawing');
         }).
       catch(() => {
-
       });
-    return dispatcher;
+  }
+
+  colorPrecinct(color, callback) {
+    return function(d) {
+      d3.select(this).attr( "fill", color);
+      callback(d);
+    }
+  };
+
+  setMouseOverEvent(color, callback) {
+    let g = d3.select( "#virginiaMap" ).select("g");
+    g.selectAll( "path" ).on('mouseover', this.colorPrecinct(color, callback));
+  }
+
+  removeMouseOverEvent() {
+    let g = d3.select( "#virginiaMap" ).select("g");
+    g.selectAll( "path" ).on('mouseover', null);
   }
 
   componentDidMount() {
+    this.drawMap();
+  }
 
-    request.get("data/virginia/demographics").then((response) => {
-      let data = JSON.parse(response.text);
-      this.demographics = data;
-    });
+  componentWillReceiveProps(nextProps) {
+    let g = d3.select( "#virginiaMap" ).select("g");
+    g.selectAll( "path" ).on('mousedown', this.colorPrecinct(nextProps.color, nextProps.mouseOverPrecinct));
+  }
 
-    let dispatcher = this.drawMap();
-    dispatcher.on('precinct:mouseover', this.mouseOverPrecinct.bind(this));
-    this.dispatcher = dispatcher;
+  onMouseDown(event) {
+    this.setMouseOverEvent(this.props.color, this.props.mouseOverPrecinct);
+  }
+
+  onMouseUp(event) {
+    this.removeMouseOverEvent();
   }
 
   render() {
-    let population = (this.state.districts[this.state.districtIndex] || []).reduce((acc, district) => {
-      return parseInt(this.demographics[parseInt(district.properties.Number, 10) % LAST_THREE_DIGITS].Population, 10) + acc;
-    }, 0);
-
     return <div>
-        Total Population: {population}
-        <div id="virginiaMap" />
+        <div
+          onMouseDown={this.onMouseDown.bind(this)}
+          onMouseUp={this.onMouseUp.bind(this)}
+          onMouseLeave={this.onMouseUp.bind(this)}
+          id="virginiaMap"
+        />
       </div>
   }
 }
 
-
-Virginia.defaultValues = {
-  numDistricts: 10
+Virginia.propTypes = {
+  mouseOverPrecinct: PropTypes.func.isRequired,
+  numDistricts: PropTypes.number
 };

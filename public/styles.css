@@ -1,3 +1,45 @@
-svg {
-  border: 1px solid black;
+.sidebar {
+  position: absolute;
+  right: 0;
+  width: 300px;
+  top: 0;
+  bottom: 0;
 }
+
+.sidebar-paper {
+
+}
+
+.bottomControl {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 100px;
+}
+
+.map {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 100px;
+}
+
+.main {
+  position: absolute;
+  left: 0;
+  right: 300px;
+  top: 0;
+  bottom: 0;
+}
+
+.district-info {
+  border: 1px solid gray;
+  border-radius: 3px;
+}
+
+body {
+  font-family: 'Roboto', sans-serif;  
+}
+
