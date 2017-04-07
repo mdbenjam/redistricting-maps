@@ -108,6 +108,7 @@ body {
 .bar {
   position: absolute;
   height: 100%;
+  color: white;
 }
 
 .legend-box {
@@ -116,4 +117,12 @@ body {
   margin-left: 10px;
   margin-right: 2px;
   display: inline-block;
+}
+
+.wrong-size {
+  color: #a8251e;
+}
+
+.right-size {
+  color: #128e1c;
 }

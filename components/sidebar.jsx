@@ -68,9 +68,12 @@ export default class Sidebar extends React.Component {
 
         return acc;
       }, {population: 0, democrat: 0, republican: 0, white: 0, black: 0, hispanic: 0, asian: 0});
+
+      let percentError = (this.props.districtPopulation - data.population) / this.props.districtPopulation;
+      let populationClass = Math.abs(percentError) < .01 ? 'right-size' : 'wrong-size';
       districts.push(<TableRow selected={index === this.props.districtIndex} key={index}>
           <TableRowColumn>{index + 1}</TableRowColumn>
-          <TableRowColumn>{data.population}</TableRowColumn>
+          <TableRowColumn className={populationClass}>{data.population}</TableRowColumn>
         </TableRow>);
 
       stats.push(<TableRow selected={index === this.props.districtIndex} key={index}>
@@ -173,6 +176,7 @@ export default class Sidebar extends React.Component {
 
 Sidebar.propTypes = {
   numDistricts: PropTypes.number.isRequired,
+  districtPopulation: PropTypes.number.isRequired,
   districts: PropTypes.array,
   demographics: PropTypes.object,
   onChangeDistrict: PropTypes.func,

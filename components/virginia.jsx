@@ -72,7 +72,10 @@ export default class Virginia extends React.Component {
   }
 
   componentWillReceiveProps(nextProps) {
-    if (!nextProps.isZooming) {
+    if (nextProps.isZooming) {
+      let g = d3.select( "#virginiaMap" ).select("g");
+      g.selectAll( "path" ).on('mousedown', null);
+    } else {
       let g = d3.select( "#virginiaMap" ).select("g");
       g.selectAll( "path" ).on('mousedown', this.colorPrecinct(nextProps.color, nextProps.mouseOverPrecinct));
     }

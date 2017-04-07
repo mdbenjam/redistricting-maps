@@ -21,6 +21,8 @@ const COLORS = [
   "#00afa8"
 ]
 
+const DISTRICT_POPULATION = 727421;
+
 export default class MapUI extends React.Component {
   constructor(props) {
     super(props);
@@ -162,6 +164,7 @@ export default class MapUI extends React.Component {
           <div className="sidebar">
             <Sidebar
               numDistricts={NUMBER_OF_CONGRESSIONAL_DISTRICTS}
+              districtPopulation={DISTRICT_POPULATION}
               demographics={this.demographics}
               districts={this.state.districts}
               onChangeDistrict={this.onChangeDistrict.bind(this)}

@@ -15,7 +15,7 @@ export default class HorizontalGraph extends React.Component {
       let percent = (data.number / total * 100);
       left = left + percent;
       return [...acc, 
-        <span className="bar" style={
+        <span aria-label={data.number} className="bar" style={
           {
             backgroundColor: data.color,
             width: percent + '%',
