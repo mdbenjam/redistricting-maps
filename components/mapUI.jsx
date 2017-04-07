@@ -4,24 +4,22 @@ import MuiThemeProvider from 'material-ui/styles/MuiThemeProvider';
 import Virginia from './virginia.jsx';
 import Sidebar from './sidebar.jsx';
 import BottomControl from './bottomControl.jsx';
-
 import request from 'superagent';
 
 const NUMBER_OF_CONGRESSIONAL_DISTRICTS = 11;
 const COLORS = [
-  "rgb(241, 196, 5)",
-  "rgb(22, 160, 134)",
-  "rgb(45, 204, 112)",
-  "rgb(210, 84, 0)",
-  "rgb(42, 128, 185)",
-  "rgb(232, 76, 61)",
-  "rgb(155, 88, 181)",
-  "rgb(45, 62, 80)",
-  "rgb(243, 156, 17)",
-  "rgb(53, 152, 219)",
-  "rgb(133, 122, 40)"
+  "#5484A4",
+  "#F6D155",
+  "#004B8D",
+  "#F2552C",
+  "#95DEE3",
+  "#EDCDC2",
+  "#88B04B",
+  "#CE3175",
+  "#CFB095",
+  "#5A7247",
+  "#00afa8"
 ]
-
 
 export default class MapUI extends React.Component {
   constructor(props) {
@@ -93,7 +91,7 @@ export default class MapUI extends React.Component {
     if (zoom < 1) {
       return;
     }
-    
+
     if (zoom === 1) {
       this.setState({
         zoom,

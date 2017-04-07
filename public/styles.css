@@ -98,3 +98,22 @@ body {
   width: 33.3%;
   vertical-align: middle;
 }
+
+.bar-graph {
+  position: relative;
+  height: 20px;
+  width: 70px;
+}
+
+.bar {
+  position: absolute;
+  height: 100%;
+}
+
+.legend-box {
+  width: 12px;
+  height: 12px;
+  margin-left: 10px;
+  margin-right: 2px;
+  display: inline-block;
+}
